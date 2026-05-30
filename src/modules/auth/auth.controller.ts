@@ -12,7 +12,8 @@ const signupUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(400).json({
       success: false,
-      message: error.message,
+      message: "User registration failed",
+      error: error.message,
     });
   }
 };
@@ -28,7 +29,8 @@ const loginUser = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(400).json({
       success: false,
-        message: error.message,
+      message: "Login failed",
+      error: error.message,
     });
   }
 };

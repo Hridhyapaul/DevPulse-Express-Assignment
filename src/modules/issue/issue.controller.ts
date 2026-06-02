@@ -3,8 +3,16 @@ import { issueService } from "./issue.service";
 
 const createIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log("User from auth middleware:", req.user);
     const result = await issueService.createIssueIntoDB(req.body, req.user);
+
+   if (req.body.status) {
+    res.status(400).json({
+      success: false,
+      message: "Status should not be provided while creating an issue",
+    });
+    return;
+   }
+
     res.status(201).json({
       success: true,
       message: "Issue created successfully",
@@ -39,7 +47,35 @@ const getAllIssues = async (
   }
 };
 
+const getSingleIssue = async (req: Request, res: Response) => {
+  const { id: issueId } = req.params;
+  try {
+    const result = await issueService.getSingleIssueFromDB(issueId as string);
+    console.log(result);
+
+    if(!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Issue retrieved successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve issue",
+      error: error.message,
+    });
+  }
+};
+
 export const issueController = {
   createIssue,
   getAllIssues,
+  getSingleIssue,
 };

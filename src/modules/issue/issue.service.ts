@@ -1,11 +1,7 @@
 import pool from "../../db";
 import type { IIssue } from "./issue.interface";
 
-const createIssueIntoDB = async (
-  payload: IIssue,
-  user: any
-) => {
-
+const createIssueIntoDB = async (payload: IIssue, user: any) => {
   const { title, description, type } = payload;
 
   const result = await pool.query(
@@ -20,12 +16,7 @@ const createIssueIntoDB = async (
       VALUES ($1,$2,$3,$4)
       RETURNING *
     `,
-    [
-      title,
-      description,
-      type,
-      user.id
-    ]
+    [title, description, type, user.id],
   );
 
   return result.rows[0];
@@ -69,32 +60,61 @@ const getAllIssuesFromDB = async (query: Record<string, string>) => {
     return [];
   }
 
-  const reporterIds = [
-    ...new Set(issues.map((issue) => issue.reporter_id)),
-  ];
+  const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
 
   const usersResult = await pool.query(
     `SELECT id, name, role FROM users WHERE id = ANY($1)`,
-    [reporterIds]
+    [reporterIds],
   );
 
   const users = usersResult.rows;
 
   const issuesWithReporter = issues.map((issue) => {
-    const reporter = users.find(
-      (user) => user.id === issue.reporter_id
-    );
+    const reporter = users.find((user) => user.id === issue.reporter_id);
 
     return {
-      ...issue,
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      type: issue.type,
+      status: issue.status,
       reporter,
+      created_at: issue.created_at,
+      updated_at: issue.updated_at,
     };
   });
 
   return issuesWithReporter;
 };
 
+const getSingleIssueFromDB = async (issueId: string) => {
+  const issueResult = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    issueId,
+  ]);
+
+  const issue = issueResult.rows[0];
+
+  const reporterResult = await pool.query(
+    `SELECT id, name, role FROM users WHERE id = $1`,
+    [issue.reporter_id],
+  );
+
+  delete issue.reporter_id;
+
+  return {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter: reporterResult.rows[0],
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
+};
+
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
+  getSingleIssueFromDB,
 };

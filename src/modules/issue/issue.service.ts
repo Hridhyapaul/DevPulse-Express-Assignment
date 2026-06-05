@@ -3,7 +3,15 @@ import { issue_status, issue_type } from "../../types";
 import type { IIssue } from "./issue.interface";
 
 const createIssueIntoDB = async (payload: IIssue, user: any) => {
-  const { title, description, type } = payload;
+  const { title, description, type, status } = payload;
+
+  if (status) {
+    const error: any = new Error(
+      "Status should not be provided while creating an issue"
+    );
+    error.statusCode = 400;
+    throw error;
+  }
 
   // Type Validation
   const allowedTypes = Object.values(issue_type);
@@ -132,7 +140,7 @@ const getSingleIssueFromDB = async (issueId: string) => {
 };
 
 const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
-  console.log(issueId, payload, user);
+
   const issueResult = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
     issueId,
   ]);

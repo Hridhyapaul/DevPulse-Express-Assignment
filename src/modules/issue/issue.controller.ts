@@ -3,14 +3,6 @@ import { issueService } from "./issue.service";
 
 const createIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (req.body.status) {
-      res.status(400).json({
-        success: false,
-        message: "Status should not be provided while creating an issue",
-      });
-      return;
-    }
-
     const result = await issueService.createIssueIntoDB(req.body, req.user);
 
     res.status(201).json({
@@ -47,14 +39,6 @@ const getSingleIssue = async (req: Request, res: Response, next: NextFunction) =
   const { id: issueId } = req.params;
   try {
     const result = await issueService.getSingleIssueFromDB(issueId as string);
-    console.log(result);
-
-    // if (!result) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: "Issue not found",
-    //   });
-    // }
 
     res.status(200).json({
       success: true,
@@ -68,7 +52,6 @@ const getSingleIssue = async (req: Request, res: Response, next: NextFunction) =
 
 const updateIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log(req.body);
     const { id: issueId } = req.params;
     const result = await issueService.updateIssueIntoDB(
       issueId as string,

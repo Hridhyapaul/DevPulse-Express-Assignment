@@ -1,4 +1,5 @@
 import pool from "../../db";
+import { issue_status, issue_type } from "../../types";
 import type { IIssue } from "./issue.interface";
 
 const createIssueIntoDB = async (payload: IIssue, user: any) => {
@@ -113,8 +114,74 @@ const getSingleIssueFromDB = async (issueId: string) => {
   };
 };
 
+const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
+  console.log(issueId, payload, user);
+  const issueResult = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    issueId,
+  ]);
+
+  if (issueResult.rowCount === 0) {
+    throw new Error("Issue not found");
+  }
+
+  const issue = issueResult.rows[0];
+
+  // Contributor Rules
+  if (user.role === "contributor") {
+    if (issue.reporter_id !== user.id) {
+      throw new Error("You can only update your own issue");
+    }
+
+    if (issue.status !== issue_status.OPEN) {
+      throw new Error("You can only update open issues");
+    }
+    
+    if (payload.status) {
+      throw new Error("Contributors are not allowed to update status");
+    }
+  }
+
+  // Type Validation
+  if (payload.type && !Object.values(issue_type).includes(payload.type)) {
+    throw new Error("Type must be bug or feature_request");
+  }
+
+  let updateStatus;
+
+  // Only maintainer can update status
+  if (user.role === "maintainer") {
+    if (
+      payload.status &&
+      !Object.values(issue_status).includes(payload.status)
+    ) {
+      throw new Error("Invalid status");
+    }
+
+    updateStatus = payload.status;
+  }
+
+  const result = await pool.query(
+    `
+    UPDATE issues
+    SET
+      title = COALESCE($1, title),
+      description = COALESCE($2, description),
+      type = COALESCE($3, type),
+      status = COALESCE($4, status),
+      updated_at = CURRENT_TIMESTAMP
+
+    WHERE id = $5
+
+    RETURNING *
+    `,
+    [payload.title, payload.description, payload.type, updateStatus, issueId],
+  );
+  return result.rows[0];
+};
+
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
   getSingleIssueFromDB,
+  updateIssueIntoDB,
 };

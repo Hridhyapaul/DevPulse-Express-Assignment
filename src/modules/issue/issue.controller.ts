@@ -5,13 +5,13 @@ const createIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await issueService.createIssueIntoDB(req.body, req.user);
 
-   if (req.body.status) {
-    res.status(400).json({
-      success: false,
-      message: "Status should not be provided while creating an issue",
-    });
-    return;
-   }
+    if (req.body.status) {
+      res.status(400).json({
+        success: false,
+        message: "Status should not be provided while creating an issue",
+      });
+      return;
+    }
 
     res.status(201).json({
       success: true,
@@ -53,7 +53,7 @@ const getSingleIssue = async (req: Request, res: Response) => {
     const result = await issueService.getSingleIssueFromDB(issueId as string);
     console.log(result);
 
-    if(!result) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: "Issue not found",
@@ -74,8 +74,33 @@ const getSingleIssue = async (req: Request, res: Response) => {
   }
 };
 
+const updateIssue = async (req: Request, res: Response) => {
+  try {
+    console.log(req.body);
+    const { id: issueId } = req.params;
+    const result = await issueService.updateIssueIntoDB(
+      issueId as string,
+      req.body,
+      req.user,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Issue updated successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to update issue",
+      error: error.message,
+    });
+  }
+};
+
 export const issueController = {
   createIssue,
   getAllIssues,
   getSingleIssue,
+  updateIssue,
 };

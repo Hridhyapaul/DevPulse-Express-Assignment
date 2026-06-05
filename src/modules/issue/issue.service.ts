@@ -9,7 +9,9 @@ const createIssueIntoDB = async (payload: IIssue, user: any) => {
   const allowedTypes = Object.values(issue_type);
 
   if (!allowedTypes.includes(type as any)) {
-    throw new Error("Type must be bug or feature_request");
+    const error: any = new Error("Type must be bug or feature_request");
+    error.statusCode = 400;
+    throw error;
   }
 
   const result = await pool.query(
@@ -65,7 +67,9 @@ const getAllIssuesFromDB = async (query: Record<string, string>) => {
   const issues = issuesResult.rows;
 
   if (issues.length === 0) {
-    return [];
+    const error: any = new Error("No issues found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
@@ -103,7 +107,9 @@ const getSingleIssueFromDB = async (issueId: string) => {
   const issue = issueResult.rows[0];
 
   if (issueResult.rowCount === 0) {
-    throw new Error("Issue not found");
+    const error: any = new Error("Issue not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const reporterResult = await pool.query(
@@ -132,7 +138,9 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
   ]);
 
   if (issueResult.rowCount === 0) {
-    throw new Error("Issue not found");
+    const error: any = new Error("Issue not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const issue = issueResult.rows[0];
@@ -140,21 +148,29 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
   // Contributor Rules
   if (user.role === "contributor") {
     if (issue.reporter_id !== user.id) {
-      throw new Error("You can only update your own issue");
+      const error: any = new Error("You can only update your own issue");
+      error.statusCode = 403;
+      throw error;
     }
 
     if (issue.status !== issue_status.OPEN) {
-      throw new Error("You can only update open issues");
+      const error: any = new Error("You can only update open issues");
+      error.statusCode = 403;
+      throw error;
     }
 
     if (payload.status) {
-      throw new Error("Contributors are not allowed to update status");
+      const error: any = new Error("Contributors are not allowed to update status");
+      error.statusCode = 403;
+      throw error;
     }
   }
 
   // Type Validation
   if (payload.type && !Object.values(issue_type).includes(payload.type)) {
-    throw new Error("Type must be bug or feature_request");
+    const error: any = new Error("Type must be bug or feature_request");
+    error.statusCode = 400;
+    throw error;
   }
 
   let updateStatus;
@@ -165,7 +181,9 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
       payload.status &&
       !Object.values(issue_status).includes(payload.status)
     ) {
-      throw new Error("Invalid status");
+      const error: any = new Error("Invalid status");
+      error.statusCode = 400;
+      throw error;
     }
 
     updateStatus = payload.status;
@@ -197,7 +215,9 @@ const deleteIssueFromDB = async (issueId: string) => {
   );
 
   if (result.rowCount === 0) {
-    throw new Error("Issue not found");
+    const error: any = new Error("Issue not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   return result.rows[0];

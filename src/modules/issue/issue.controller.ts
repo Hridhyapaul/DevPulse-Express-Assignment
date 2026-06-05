@@ -19,11 +19,7 @@ const createIssue = async (req: Request, res: Response, next: NextFunction) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: "Failed to create issue",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -47,18 +43,18 @@ const getAllIssues = async (
   }
 };
 
-const getSingleIssue = async (req: Request, res: Response) => {
+const getSingleIssue = async (req: Request, res: Response, next: NextFunction) => {
   const { id: issueId } = req.params;
   try {
     const result = await issueService.getSingleIssueFromDB(issueId as string);
     console.log(result);
 
-    if (!result) {
-      return res.status(404).json({
-        success: false,
-        message: "Issue not found",
-      });
-    }
+    // if (!result) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Issue not found",
+    //   });
+    // }
 
     res.status(200).json({
       success: true,
@@ -66,15 +62,11 @@ const getSingleIssue = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve issue",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const updateIssue = async (req: Request, res: Response) => {
+const updateIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log(req.body);
     const { id: issueId } = req.params;
@@ -90,15 +82,11 @@ const updateIssue = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: "Failed to update issue",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const deleteIssue = async (req: Request, res: Response) => {
+const deleteIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await issueService.deleteIssueFromDB(req.params.id as string);
 
@@ -108,11 +96,7 @@ const deleteIssue = async (req: Request, res: Response) => {
       data: null,
     });
   } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: "Failed to delete issue",
-      error: error.message,
-    });
+    next(error);
   }
 };
 

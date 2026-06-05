@@ -14,14 +14,18 @@ const registerUserIntoDB = async (payload: IAuth) => {
   );
 
   if (existingUser.rowCount && existingUser.rowCount > 0) {
-    throw new Error("User already exists");
+    const error: any = new Error("User already exists");
+    error.statusCode = 400;
+    throw error;
   }
 
   // Validate role
   const allowedRoles = ["contributor", "maintainer"];
 
   if (role && !allowedRoles.includes(role)) {
-    throw new Error("Role must be contributor or maintainer");
+    const error: any = new Error("Role must be contributor or maintainer");
+    error.statusCode = 400;
+    throw error;
   }
 
   // Hash password
@@ -55,7 +59,9 @@ const loginUserIntoDB = async (payload: {
   ]);
 
   if (userData.rowCount === 0) {
-    throw new Error("User not found");
+    const error: any = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const user = userData.rows[0];
@@ -64,7 +70,9 @@ const loginUserIntoDB = async (payload: {
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    throw new Error("Invalid password");
+    const error: any = new Error("Invalid password");
+    error.statusCode = 401;
+    throw error;
   }
 
   const jwtPayload = {
@@ -75,13 +83,9 @@ const loginUserIntoDB = async (payload: {
 
   // Generate Token
 
-  const token = jwt.sign(
-    jwtPayload,
-    config.secretKey as string,
-    {
-      expiresIn: "1h",
-    }
-  );
+  const token = jwt.sign(jwtPayload, config.secretKey as string, {
+    expiresIn: "1h",
+  });
 
   delete user.password;
 

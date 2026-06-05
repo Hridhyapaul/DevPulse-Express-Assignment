@@ -5,6 +5,13 @@ import type { IIssue } from "./issue.interface";
 const createIssueIntoDB = async (payload: IIssue, user: any) => {
   const { title, description, type } = payload;
 
+  // Type Validation
+  const allowedTypes = Object.values(issue_type);
+
+  if (!allowedTypes.includes(type as any)) {
+    throw new Error("Type must be bug or feature_request");
+  }
+
   const result = await pool.query(
     `
       INSERT INTO issues
@@ -94,6 +101,10 @@ const getSingleIssueFromDB = async (issueId: string) => {
   ]);
 
   const issue = issueResult.rows[0];
+
+  if (issueResult.rowCount === 0) {
+    throw new Error("Issue not found");
+  }
 
   const reporterResult = await pool.query(
     `SELECT id, name, role FROM users WHERE id = $1`,

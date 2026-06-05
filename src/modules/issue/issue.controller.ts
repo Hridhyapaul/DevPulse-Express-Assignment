@@ -3,8 +3,6 @@ import { issueService } from "./issue.service";
 
 const createIssue = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await issueService.createIssueIntoDB(req.body, req.user);
-
     if (req.body.status) {
       res.status(400).json({
         success: false,
@@ -12,6 +10,8 @@ const createIssue = async (req: Request, res: Response, next: NextFunction) => {
       });
       return;
     }
+
+    const result = await issueService.createIssueIntoDB(req.body, req.user);
 
     res.status(201).json({
       success: true,

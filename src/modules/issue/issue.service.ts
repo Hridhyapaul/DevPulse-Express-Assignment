@@ -135,7 +135,7 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
     if (issue.status !== issue_status.OPEN) {
       throw new Error("You can only update open issues");
     }
-    
+
     if (payload.status) {
       throw new Error("Contributors are not allowed to update status");
     }
@@ -179,9 +179,23 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
   return result.rows[0];
 };
 
+const deleteIssueFromDB = async (issueId: string) => {
+  const result = await pool.query(
+    `DELETE FROM issues WHERE id = $1 RETURNING *`,
+    [issueId],
+  );
+
+  if (result.rowCount === 0) {
+    throw new Error("Issue not found");
+  }
+
+  return result.rows[0];
+};
+
 export const issueService = {
   createIssueIntoDB,
   getAllIssuesFromDB,
   getSingleIssueFromDB,
   updateIssueIntoDB,
+  deleteIssueFromDB,
 };

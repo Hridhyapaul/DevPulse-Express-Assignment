@@ -17,7 +17,7 @@ const createIssueIntoDB = async (payload: IIssue, user: any) => {
   const allowedTypes = Object.values(issue_type);
 
   if (!allowedTypes.includes(type as any)) {
-    const error: any = new Error("Type must be bug or feature_request");
+    const error: any = new Error("Issue type must be bug or feature_request");
     error.statusCode = 400;
     throw error;
   }
@@ -176,7 +176,7 @@ const updateIssueIntoDB = async (issueId: string, payload: any, user: any) => {
 
   // Type Validation
   if (payload.type && !Object.values(issue_type).includes(payload.type)) {
-    const error: any = new Error("Type must be bug or feature_request");
+    const error: any = new Error("Issue type must be bug or feature_request");
     error.statusCode = 400;
     throw error;
   }
